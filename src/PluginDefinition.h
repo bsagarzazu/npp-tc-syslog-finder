@@ -75,6 +75,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //
 void openLatestSyslog();
 void highlightLinesContainingPrefixByLevel();
+void forgetPrefixHighlightState(UINT_PTR bufferId);
 void openSyslogFolder();
 void openRootFolder();
 void cleanOldSyslogs();

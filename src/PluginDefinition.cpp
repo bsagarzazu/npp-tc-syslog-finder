@@ -22,6 +22,7 @@
 #include <tchar.h>
 #include <shellapi.h>
 #include <cstring>
+#include <set>
 #include <vector>
 
 //
@@ -164,6 +165,7 @@ enum class LogLevel
 
 const int logLevelCount = 5;
 int logLevelIndicatorIds[logLevelCount] = { -1, -1, -1, -1, -1 };
+std::set<UINT_PTR> highlightedBufferIds;
 
 int hexDigitValue(TCHAR ch)
 {
@@ -247,14 +249,47 @@ LogLevel classifyLogLevel(const char* line, size_t lineLength)
     return LogLevel::Other;
 }
 
+void clearPrefixLineHighlights(HWND curScintilla, int docLength)
+{
+    for (int i = 0; i < logLevelCount; ++i)
+    {
+        if (logLevelIndicatorIds[i] < 0)
+            continue;
+
+        ::SendMessage(curScintilla, SCI_SETINDICATORCURRENT, logLevelIndicatorIds[i], 0);
+        ::SendMessage(curScintilla, SCI_INDICATORCLEARRANGE, 0, docLength);
+    }
+}
+
+void forgetPrefixHighlightState(UINT_PTR bufferId)
+{
+    highlightedBufferIds.erase(bufferId);
+}
+
 void markPrefixLinesByLevel(const TCHAR* customPrefix)
 {
-    if (!customPrefix || customPrefix[0] == 0)
-        return;
-
     HWND curScintilla = getCurrentScintilla();
     if (!curScintilla)
         return;
+
+    UINT_PTR bufferId = (UINT_PTR)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+    if (bufferId == 0)
+        return;
+
+    std::set<UINT_PTR>::iterator highlightedBuffer = highlightedBufferIds.find(bufferId);
+    if (highlightedBuffer != highlightedBufferIds.end())
+    {
+        int docLength = (int)::SendMessage(curScintilla, SCI_GETLENGTH, 0, 0);
+        clearPrefixLineHighlights(curScintilla, docLength);
+        highlightedBufferIds.erase(highlightedBuffer);
+        return;
+    }
+
+    if (!customPrefix || customPrefix[0] == 0)
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("Custom prefix not set. Use 'Edit Settings' to set it."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
+        return;
+    }
 
     COLORREF colors[logLevelCount];
     const TCHAR* colorValues[logLevelCount] = {
@@ -309,16 +344,14 @@ void markPrefixLinesByLevel(const TCHAR* customPrefix)
     int previousTargetStart = (int)::SendMessage(curScintilla, SCI_GETTARGETSTART, 0, 0);
     int previousTargetEnd = (int)::SendMessage(curScintilla, SCI_GETTARGETEND, 0, 0);
 
-    // Configure the indicators and remove this plugin's previous highlights.
+    // Configure the indicators and clear any previous highlights from this plugin.
     for (int i = 0; i < logLevelCount; ++i)
     {
         ::SendMessage(curScintilla, SCI_INDICSETSTYLE, logLevelIndicatorIds[i], INDIC_FULLBOX);
         ::SendMessage(curScintilla, SCI_INDICSETFORE, logLevelIndicatorIds[i], colors[i]);
         ::SendMessage(curScintilla, SCI_INDICSETALPHA, logLevelIndicatorIds[i], 55);
-
-        ::SendMessage(curScintilla, SCI_SETINDICATORCURRENT, logLevelIndicatorIds[i], 0);
-        ::SendMessage(curScintilla, SCI_INDICATORCLEARRANGE, 0, docLength);
     }
+    clearPrefixLineHighlights(curScintilla, docLength);
 
     // Without SCFIND_MATCHCASE, the prefix search is case-insensitive.
     ::SendMessage(curScintilla, SCI_SETSEARCHFLAGS, SCFIND_NONE, 0);
@@ -349,6 +382,7 @@ void markPrefixLinesByLevel(const TCHAR* customPrefix)
     ::SendMessage(curScintilla, SCI_SETSEARCHFLAGS, previousSearchFlags, 0);
     ::SendMessage(curScintilla, SCI_SETTARGETRANGE, previousTargetStart, previousTargetEnd);
     ::SendMessage(curScintilla, SCI_SETINDICATORCURRENT, previousIndicatorId, 0);
+    highlightedBufferIds.insert(bufferId);
 }
 
 //
@@ -476,12 +510,6 @@ void highlightLinesContainingPrefixByLevel()
 {
     // Load the latest configuration
     loadConfig();
-
-    if (szCustomPrefix[0] == 0)
-    {
-        ::MessageBox(nppData._nppHandle, TEXT("Custom prefix not set. Use 'Edit Settings' to set it."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
-        return;
-    }
 
     markPrefixLinesByLevel(szCustomPrefix);
 }

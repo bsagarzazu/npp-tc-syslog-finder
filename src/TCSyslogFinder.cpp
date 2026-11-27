@@ -72,6 +72,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
 	switch (notifyCode->nmhdr.code) 
 	{
+		case NPPN_FILECLOSED:
+			forgetPrefixHighlightState((UINT_PTR)notifyCode->nmhdr.idFrom);
+			break;
+
 		case NPPN_SHUTDOWN:
 		{
 			commandMenuCleanUp();

@@ -10,7 +10,7 @@ Every time you start a new Teamcenter session —which happens a lot during debu
 
 ### Shortcuts
 * `Alt + Shift + L`: Open the latest syslog at the end of the file, with monitoring mode activated.
-* `Alt + Shift + P`: Highlight full lines in the active document that contain the configured custom prefix. Matching lines are marked by detected log level.
+* `Alt + Shift + P`: Highlight full lines in the active document that contain the configured custom prefix, colored by detected log level. Press it again to clear the highlights.
 * `Alt + Shift + R`: Open the Teamcenter logs root folder in Windows Explorer. The path is automatically detected if `SIEMENS_LOGGING_ROOT` is defined.
 * `Alt + Shift + F`: Open the specific syslogs folder in Windows Explorer.
 * `Alt + Shift + C`: Clean old logs (older than 7 days by default). The threshold is configurable in settings.
