@@ -2,6 +2,9 @@ name: CI_build
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   build:
 
@@ -45,8 +48,21 @@ jobs:
           name: TCSyslogFinder_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}.zip
           path: TCSyslogFinder_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}.zip
 
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download release archives
+      uses: actions/download-artifact@v7
+      with:
+        pattern: TCSyslogFinder_${{ github.ref_name }}_*.zip
+        path: release-artifacts
+        merge-multiple: true
+
     - name: Create release on tagging
       uses: softprops/action-gh-release@v3
-      if: startsWith(github.ref, 'refs/tags/')
       with:
-          files: TCSyslogFinder_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}.zip
+        files: release-artifacts/*.zip
