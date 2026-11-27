@@ -10,6 +10,7 @@ Every time you start a new Teamcenter session —which happens a lot during debu
 
 ### Shortcuts
 * `Alt + Shift + L`: Open the latest syslog at the end of the file, with monitoring mode activated.
+* `Alt + Shift + P`: Highlight full lines in the active document that contain the configured custom prefix. Matching lines are marked by detected log level.
 * `Alt + Shift + R`: Open the Teamcenter logs root folder in Windows Explorer. The path is automatically detected if `SIEMENS_LOGGING_ROOT` is defined.
 * `Alt + Shift + F`: Open the specific syslogs folder in Windows Explorer.
 * `Alt + Shift + C`: Clean old logs (older than 7 days by default). The threshold is configurable in settings.
@@ -29,7 +30,7 @@ TC Syslog Finder is an official Notepad++ plugin since `v8.9.5`. You can install
 3. Drop the DLL inside and restart Notepad++.
 
 ### Configuration
-Go to **Plugins > TC Syslog Finder > Set TC Syslog Path** and select your logs directory once. Use **Edit Settings** to fine-tune the search patterns, paths or the cleanup threshold.
+Go to **Plugins > TC Syslog Finder > Set TC Syslog Path** and select your logs directory once. Use **Edit Settings** to fine-tune search patterns, paths, and the cleanup threshold, and to configure prefix highlighting.
 
 ---
 License: GPL-2.0
